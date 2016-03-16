@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SUBL_HOME=$HOME/applications/sublime_text_3
+SO_FILE=$SUBL_HOME/libsublime-imfix.so
+if [ ! -f "$SOFILE"]; then
+    CMD="LD_PRELOAD=SO_FILE ./sublime_text"
+else
+    CMD="./sublime_text"
+fi
+
+FILENAME=$1
+if [ -n "$1" ]; then
+    CMD=${CMD}" "`pwd`/$FILENAME
+fi
+cd "$SUBL_HOME"
+eval $CMD

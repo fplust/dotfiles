@@ -1,0 +1,12 @@
+[user]
+	name = FPlust Lu
+	email = fplustlu@gmail.com
+[gui]
+	fontui = -family \"Source Code Pro\" -size 10 -weight normal -slant roman -underline 0 -overstrike 0
+	fontdiff = -family \"Source Code Pro\" -size 10 -weight normal -slant roman -underline 0 -overstrike 0
+	tabsize = 4
+	encoding = utf-8
+[core]
+	editor = vim
+[push]
+	default = simple

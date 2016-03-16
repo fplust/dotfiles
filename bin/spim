@@ -1,0 +1,12 @@
+#!/bin/bash
+
+SPIM_HOME=$HOME/applications/spim/bin
+CMD="./spim"
+FILENAME=$1
+if [ -n "$1" ]
+then
+CMD=${CMD}" "`pwd`/$FILENAME
+fi
+cd "$SPIM_HOME"
+eval $CMD
+
