@@ -1,41 +1,7 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Maintainer:
-"       Amir Salihefendic
-"       http://amix.dk - amix@amix.dk
-"
-" Version:
-"       5.0 - 29/05/12 15:43:36
-"
-" Blog_post:
-"       http://amix.dk/blog/post/19691#The-ultimate-Vim-configuration-on-Github
-"
-" Awesome_version:
-"       Get this config, nice color schemes and lots of plugins!
-"
-"       Install the awesome version from:
-"
-"           https://github.com/amix/vimrc
-"
-" Syntax_highlighted:
-"       http://amix.dk/vim/vimrc.html
-"
-" Raw_version:
-"       http://amix.dk/vim/vimrc.txt
-"
-" Sections:
-"    -> General
-"    -> VIM user interface
-"    -> Colors and Fonts
-"    -> Files and backups
-"    -> Text, tab and indent related
-"    -> Visual mode related
-"    -> Moving around, tabs and buffers
-"    -> Status line
-"    -> Editing mappings
-"    -> vimgrep searching and cope displaying
-"    -> Spell checking
-"    -> Misc
-"    -> Helper functions
+"       Fplust Lu
+"       fplustlu@gmail.com
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -45,7 +11,6 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sets how many lines of history VIM has to remember
 set history=500
-set showcmd
 
 " Enable filetype plugins
 filetype plugin on
@@ -266,14 +231,6 @@ try
 catch
 endtry
 
-" Return to last edit position when opening files (You want this!)
-" autocmd BufReadPost *
-"      \ if line("'\"") > 0 && line("'\"") <= line("$") |
-"      \   exe "normal! g`\"" |
-"      \ endif
-" Remember info about open buffers on close
-" set viminfo^=%
-
 
 """"""""""""""""""""""""""""""
 " => bufExplorer plugin
@@ -298,22 +255,6 @@ set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Editing mappings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Remap VIM 0 to first non-blank character
-map 0 ^
-
-" Move a line of text using ALT+[jk] or Comamnd+[jk] on mac
-nmap <M-j> mz:m+<cr>`z
-nmap <M-k> mz:m-2<cr>`z
-vmap <M-j> :m'>+<cr>`<my`>mzgv`yo`z
-vmap <M-k> :m'<-2<cr>`>my`<mzgv`yo`z
-
-if has("mac") || has("macunix")
-  nmap <D-j> <M-j>
-  nmap <D-k> <M-k>
-  vmap <D-j> <M-j>
-  vmap <D-k> <M-k>
-endif
-
 " Delete trailing white space on save, useful for Python and CoffeeScript ;)
 func! DeleteTrailingWS()
   exe "normal mz"
@@ -408,7 +349,6 @@ Plugin 'jlanzarotta/bufexplorer'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'rking/ag.vim'
 Plugin 'ryanoasis/vim-devicons'
-" Plugin 'ternjs/tern_for_vim'
 Plugin 'scrooloose/nerdcommenter'
 Plugin 'mattn/emmet-vim'
 Plugin 'airblade/vim-gitgutter'
@@ -492,7 +432,7 @@ let g:syntastic_enable_balloons = 1
 if !empty(glob("~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py"))
     let g:ycm_global_ycm_extra_conf = "~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py"
 endif
-set completeopt=longest,menu    "让Vim的补全菜单行为与一般IDE一致(参考VimTip1228)
+set completeopt=longest,menu
 set omnifunc=syntaxcomplete
 let g:ycm_add_preview_to_completeopt = 1
 let g:ycm_autoclose_preview_window_after_completion = 0
@@ -503,8 +443,6 @@ let g:ycm_seed_identifiers_with_syntax=1    " 语法关键字补全
 let g:ycm_confirm_extra_conf = 0    "关闭加载.ycm_extra_conf.py提示
 let g:ycm_python_binary_path = '/home/fplust/pyenv/mainpy/bin/python'
 let g:ycm_path_to_python_interpreter = '/usr/bin/python3'
-"let g:ycm_server_keep_logfiles = 1
-"let g:ycm_server_log_level = 'debug'
 
 " 跳转到定义处
 " nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
