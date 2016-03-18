@@ -10,3 +10,5 @@
 	editor = vim
 [push]
 	default = simple
+[alias]
+    graph = log --graph --oneline
