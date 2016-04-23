@@ -108,6 +108,9 @@ set tm=500
 
 " Show line number
 set nu
+" Show newline char
+set listchars=eol:¬
+set list
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Fonts
@@ -347,6 +350,9 @@ Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'jlanzarotta/bufexplorer'
 " Plugin 'tpope/vim-surround'
 Plugin 'Valloric/YouCompleteMe'
+"Plugin 'davidhalter/jedi-vim'
+"Plugin 'ervandew/supertab'
+Plugin 'Yggdroot/indentLine'
 Plugin 'rking/ag.vim'
 Plugin 'ryanoasis/vim-devicons'
 Plugin 'scrooloose/nerdcommenter'
@@ -469,7 +475,7 @@ map <C-n> :NERDTreeToggle<cr>
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#whitespace#enabled = 1
 let g:airline#extensions#whitespace#symbol = '◉'
-" let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#enabled = 1
 let g:airline_theme="solarized"
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
