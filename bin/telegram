@@ -1,0 +1,4 @@
+#! /bin/bash
+
+cd /home/fplust/applications/Telegram
+./Telegram
