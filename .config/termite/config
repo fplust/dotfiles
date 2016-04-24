@@ -1,7 +1,7 @@
 # font setting
 [options]
 # font = Fira Code 10
-font = Source Code Pro 10
+font = Source Code Pro 12px
 clickable_url = true
 resize_grip = false
 scroll_on_output = false
