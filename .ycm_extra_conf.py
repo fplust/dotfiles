@@ -6,7 +6,7 @@ import ycm_core
 def LoadSystemIncludes():
     regex = re.compile(r'(?:\#include \<...\> search starts here\:)(?P<list>.*?)(?:End of search list)', re.DOTALL)
     process = subprocess.Popen(
-        ['clang', '-v', '-E', '-x', 'c++', '-'],
+        ['gcc', '-v', '-E', '-x', 'c++', '-'],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
