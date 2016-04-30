@@ -38,7 +38,16 @@ flags = [
     '-I',
     '.',
 ]
-systemIncludes = LoadSystemIncludes();
+# systemIncludes = LoadSystemIncludes();
+systemIncludes = [
+    '-isystem', '/usr/include/c++/5.3.0',
+    '-isystem', '/usr/include/c++/5.3.0/x86_64-unknown-linux-gnu',
+    '-isystem', '/usr/include/c++/5.3.0/backward',
+    '-isystem', '/usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include',
+    '-isystem', '/usr/local/include',
+    '-isystem', '/usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include-fixed',
+    '-isystem', '/usr/include'
+]
 flags = flags + systemIncludes;
 
 def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
