@@ -105,7 +105,7 @@ set tm=500
 
 " Show line number
 set nu
-" Show newline char
+" Show tab and newline char
 set listchars=tab:‡→,eol:¬
 set list
 
@@ -233,16 +233,6 @@ endtry
 
 
 """"""""""""""""""""""""""""""
-" => bufExplorer plugin
-""""""""""""""""""""""""""""""
-let g:bufExplorerDefaultHelp=0
-let g:bufExplorerShowRelativePath=1
-let g:bufExplorerFindActive=1
-let g:bufExplorerSortBy='name'
-map <leader>o :BufExplorer<cr>
-
-
-""""""""""""""""""""""""""""""
 " => Status line
 """"""""""""""""""""""""""""""
 " Always show the status line
@@ -336,14 +326,6 @@ endif
 set nocompatible
 call plug#begin('~/.vim/bundle')
 
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
-" let Vundle manage Vundle, required
-" Plug 'VundleVim/Vundle.vim'
-
-" The following are examples of different formats supported.
-" Keep Plugin commands between vundle#begin/end.
 " plugin on GitHub repo
 Plug 'mhinz/vim-startify'
 Plug 'tpope/vim-fugitive'
@@ -370,7 +352,6 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'wting/rust.vim'
 Plug 'lilydjwg/fcitx.vim'
 
-" All of your Plugins must be added before the following line
 call plug#end()            " required
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
