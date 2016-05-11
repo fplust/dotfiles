@@ -62,21 +62,47 @@ __powerline() {
         [ -x "$(which git)" ] || return    # git not found
 
         local git_eng="env LANG=C git"   # force git output in English to make our work easier
-        # get current branch name or short SHA1 hash for detached head
-        local branch="$($git_eng symbolic-ref --short HEAD 2>/dev/null || $git_eng describe --tags --always 2>/dev/null)"
-        [ -n "$branch" ] || return  # git branch not found
 
-        local marks
+        gitstatus=$( $git_eng status --porcelain --branch 2>/dev/null )
+        [[ "$?" -ne 0 ]] && return  # git branch not found
 
-        # branch is modified?
-        [ -n "$($git_eng status --porcelain)" ] && marks+=" $GIT_BRANCH_CHANGED_SYMBOL"
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            status=${line:0:2}
+            case "$status" in
+                \#\#) branch_line="${line/\.\.\./^}" ;;
+                *) marks+=" $GIT_BRANCH_CHANGED_SYMBOL"  ;;
+            esac
+            [ -n "$marks" ] && break
+        done <<< "$gitstatus"
 
-        # how many commits local branch is ahead/behind of remote?
-        local stat="$($git_eng status --porcelain --branch | grep '^##' | grep -o '\[.\+\]$')"
-        local aheadN="$(echo $stat | grep -o 'ahead [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
-        local behindN="$(echo $stat | grep -o 'behind [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
-        [ -n "$aheadN" ] && marks+=" $GIT_NEED_PUSH_SYMBOL$aheadN"
-        [ -n "$behindN" ] && marks+=" $GIT_NEED_PULL_SYMBOL$behindN"
+        IFS="^" read -ra branch_fields <<< "${branch_line/\#\# }"
+        branch="${branch_fields[0]}"
+
+        if [[ "$branch" == *"Initial commit on"* ]]; then
+            IFS=" " read -ra fields <<< "$branch"
+            branch="${fields[3]}"
+        elif [[ "$branch" == *"no branch"* ]]; then
+            tag=$( $git_eng describe --tags --exact-match 2>/dev/null )
+            if [[ -n "$tag" ]]; then
+                branch="$tag"
+            else
+                branch="$( $git_eng rev-parse --short HEAD 2>/dev/null )"
+            fi
+        else
+            if [[ "${#branch_fields[@]}" -ne 1 ]]; then
+                IFS="[,]" read -ra remote_fields <<< "${branch_fields[1]}"
+                for remote_field in "${remote_fields[@]}"; do
+                    if [[ "$remote_field" == *ahead* ]]; then
+                        num_ahead=${remote_field:6}
+                        marks+=" $GIT_NEED_PUSH_SYMBOL$num_ahead"
+                    fi
+                    if [[ "$remote_field" == *behind* ]]; then
+                        num_behind=${remote_field:7}
+                        marks+=" $GIT_NEED_PULL_SYMBOL$num_behind"
+                    fi
+                done
+            fi
+        fi
 
         # print the git branch segment without a trailing newline
         printf " $GIT_BRANCH_SYMBOL$branch$marks "
