@@ -202,6 +202,6 @@ client.focused_inactive #268bd2 #268bd2 #fdf6e3 #484e50
 client.unfocused        #333333 #93a1a1 #fdf6e3 #292d2e
 
 # startup
-exec --no-startup-id feh --bg-fill ~/pictures/wallpaper.jpg
+exec --no-startup-id feh --bg-fill ~/Pictures/wallpaper.jpg
 # exec --no-startup-id volumeicon
 # exec --no-startup-id workrave
