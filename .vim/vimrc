@@ -106,7 +106,7 @@ set tm=500
 " Show line number
 set nu
 " Show newline char
-set listchars=eol:¬
+set listchars=tab:‡→,eol:¬
 set list
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
