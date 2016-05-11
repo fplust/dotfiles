@@ -4,9 +4,6 @@
 "       fplustlu@gmail.com
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => General
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Sets how many lines of history VIM has to remember
@@ -325,72 +322,46 @@ map <leader>pp :setlocal paste!<cr>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => plugins
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set nocompatible              " be iMproved, required
-filetype off                  " required
+set nocompatible
+call plug#begin('~/.vim/bundle')
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
 " alternatively, pass a path where Vundle should install plugins
 "call vundle#begin('~/some/path/here')
 
 " let Vundle manage Vundle, required
-Plugin 'VundleVim/Vundle.vim'
+" Plug 'VundleVim/Vundle.vim'
 
 " The following are examples of different formats supported.
 " Keep Plugin commands between vundle#begin/end.
 " plugin on GitHub repo
-Plugin 'mhinz/vim-startify'
-Plugin 'tpope/vim-fugitive'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'scrooloose/syntastic'
-Plugin 'scrooloose/nerdtree'
-Plugin 'Xuyuanp/nerdtree-git-plugin'
-Plugin 'jlanzarotta/bufexplorer'
-" Plugin 'tpope/vim-surround'
-Plugin 'Valloric/YouCompleteMe'
-"Plugin 'davidhalter/jedi-vim'
-"Plugin 'ervandew/supertab'
-Plugin 'Yggdroot/indentLine'
-Plugin 'rking/ag.vim'
-Plugin 'ryanoasis/vim-devicons'
-Plugin 'scrooloose/nerdcommenter'
-Plugin 'mattn/emmet-vim'
-Plugin 'airblade/vim-gitgutter'
-"Plugin 'Raimondi/delimitMate'
-Plugin 'godlygeek/tabular'
-Plugin 'tpope/vim-markdown'
-Plugin 'majutsushi/tagbar'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'wting/rust.vim'
-Plugin 'lilydjwg/fcitx.vim'
-" plugin from http://vim-scripts.org/vim/scripts.html
-" Plugin 'L9'
-" Git plugin not hosted on GitHub
-" Plugin 'git://git.wincent.com/command-t.git'
-" git repos on your local machine (i.e. when working on your own plugin)
-" Plugin 'file:///home/gmarik/path/to/plugin'
-" The sparkup vim script is in a subdirectory of this repo called vim.
-" Pass the path to set the runtimepath properly.
-" Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-" Avoid a name conflict with L9
-" Plugin 'user/L9', {'name': 'newL9'}
+Plug 'mhinz/vim-startify'
+Plug 'tpope/vim-fugitive'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'scrooloose/syntastic'
+Plug 'scrooloose/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'jlanzarotta/bufexplorer'
+" Plug 'tpope/vim-surround'
+Plug 'Valloric/YouCompleteMe'
+"Plug 'davidhalter/jedi-vim'
+"Plug 'ervandew/supertab'
+Plug 'Yggdroot/indentLine'
+Plug 'rking/ag.vim'
+Plug 'ryanoasis/vim-devicons'
+Plug 'scrooloose/nerdcommenter'
+Plug 'mattn/emmet-vim'
+Plug 'airblade/vim-gitgutter'
+"Plug 'Raimondi/delimitMate'
+Plug 'godlygeek/tabular'
+Plug 'tpope/vim-markdown'
+Plug 'majutsushi/tagbar'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'wting/rust.vim'
+Plug 'lilydjwg/fcitx.vim'
 
 " All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-"filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
+call plug#end()            " required
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => CtrlP
