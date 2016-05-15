@@ -350,6 +350,8 @@ Plug 'tpope/vim-markdown'
 Plug 'majutsushi/tagbar'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'wting/rust.vim'
+Plug 'jceb/vim-orgmode'
+Plug 'vimwiki/vimwiki'
 Plug 'lilydjwg/fcitx.vim'
 
 call plug#end()            " required
