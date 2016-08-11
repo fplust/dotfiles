@@ -106,8 +106,8 @@ set tm=500
 " Show line number
 set nu
 " Show tab and newline char
-set listchars=tab:‡→,eol:¬
-set list
+"set listchars=tab:‡→,eol:¬
+"set list
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Fonts
@@ -199,7 +199,7 @@ map <C-h> <C-W>h
 map <C-l> <C-W>l
 
 " Close the current buffer
-map <leader>bd :Bclose<cr>
+map <leader>bc :Bclose<cr>
 
 " Close all the buffers
 map <leader>ba :bufdo bd<cr>
@@ -314,7 +314,7 @@ if executable('ag')
     set grepprg=ag\ --nogroup\ --nocolor
 
     " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-    let g:ctrlp_user_command = 'ag %s -l --nocolor --nogroup -g ""'
+    let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
 
     " ag is fast enough that CtrlP doesn't need to cache
     let g:ctrlp_use_caching = 0
@@ -340,7 +340,7 @@ Plug 'Valloric/YouCompleteMe'
 "Plug 'ervandew/supertab'
 Plug 'Yggdroot/indentLine'
 Plug 'rking/ag.vim'
-Plug 'ryanoasis/vim-devicons'
+"Plug 'ryanoasis/vim-devicons'
 Plug 'scrooloose/nerdcommenter'
 Plug 'Chiel92/vim-autoformat'
 Plug 'mattn/emmet-vim'
@@ -360,8 +360,9 @@ call plug#end()            " required
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => CtrlP
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let g:ctrlp_map = '<c-p>'
-let g:ctrlp_cmd = 'CtrlPBuffer'
+"let g:ctrlp_cmd = 'CtrlPBuffer'
+let g:ctrlp_working_path_mode = 'a'
+map <C-b> :CtrlPBuffer<CR>
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -412,7 +413,7 @@ let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_min_num_of_chars_for_completion=2 " 从第2个键入字符就开始罗列匹配项
 let g:ycm_seed_identifiers_with_syntax=1    " 语法关键字补全
 let g:ycm_confirm_extra_conf = 0    "关闭加载.ycm_extra_conf.py提示
-let g:ycm_python_binary_path = '/home/fplust/pyenv/mainpy/bin/python'
+let g:ycm_python_binary_path = 'python'
 let g:ycm_path_to_python_interpreter = '/usr/bin/python3'
 
 " 跳转到定义处
@@ -438,7 +439,7 @@ map <C-n> :NERDTreeToggle<cr>
 " => vim-airline config (force color)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:airline_powerline_fonts = 1
-let g:airline#extensions#whitespace#enabled = 1
+let g:airline#extensions#whitespace#enabled = 0
 let g:airline#extensions#whitespace#symbol = '◉'
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_theme="solarized"

@@ -3,11 +3,10 @@ import re
 import subprocess
 import ycm_core
 
-
 def LoadSystemIncludes():
     regex = re.compile(r'(?:\#include \<...\> search starts here\:)(?P<list>.*?)(?:End of search list)', re.DOTALL)
     process = subprocess.Popen(
-        ['gcc', '-v', '-E', '-x', 'c++', '-'],
+        ['clang', '-v', '-E', '-x', 'c++', '-'],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
@@ -24,33 +23,25 @@ def LoadSystemIncludes():
 
 SOURCE_EXTENSIONS = ['.cpp', '.cxx', '.cc', '.c', '.m', '.mm']
 scriptPath = os.path.dirname(os.path.abspath(__file__))
-compilation_database_folder = os.path.join(scriptPath, 'build')
+# scriptPath = None
+compilation_database_folder = ''
+# compilation_database_folder = os.path.join(scriptPath, 'build')
 if os.path.exists(compilation_database_folder):
     database = ycm_core.CompilationDatabase(compilation_database_folder)
 else:
     database = None
-
 flags = [
     '-Wall',
-    '-std=c++11',
-    '-stdlib=libc++',
+    '-std=c++14',
     '-x',
     'c++',
     '-I',
     '.',
 ]
-# systemIncludes = LoadSystemIncludes();
-systemIncludes = [
-    '-isystem', '/usr/include/c++/6.1.1',
-    '-isystem', '/usr/include/c++/6.1.1/x86_64-unknown-linux-gnu',
-    '-isystem', '/usr/include/c++/6.1.1/backward',
-    '-isystem', '/usr/lib/gcc/x86_64-unknown-linux-gnu/6.1.1/include',
-    '-isystem', '/usr/local/include',
-    '-isystem', '/usr/lib/gcc/x86_64-unknown-linux-gnu/6.1.1/include-fixed',
-    '-isystem', '/usr/include'
-]
-flags = flags + systemIncludes
 
+systemIncludes = LoadSystemIncludes();
+
+flags = flags + systemIncludes
 
 def MakeRelativePathsInFlagsAbsolute(flags, working_directory):
     if not working_directory:
@@ -71,10 +62,10 @@ def MakeRelativePathsInFlagsAbsolute(flags, working_directory):
                 make_next_absolute = True
                 break
 
-        if flag.startswith(path_flag):
-            path = flag[len(path_flag):]
-            new_flag = path_flag + os.path.join(working_directory, path)
-            break
+            if flag.startswith(path_flag):
+                path = flag[len(path_flag):]
+                new_flag = path_flag + os.path.join(working_directory, path)
+                break
 
         if new_flag:
             new_flags.append(new_flag)
