@@ -130,6 +130,16 @@ set t_Co=256
 set guitablabel=%M\ %t
 endif
 
+if &term=~ "xterm"
+    let &t_Co = 256
+endif
+if &term=~ "tmux"
+    let &t_Co = 256
+endif
+if &term=~ "256color"
+    let &t_Co = 256
+endif
+
 " Set utf8 as standard encoding and en_US as the standard language
 set encoding=utf-8
 

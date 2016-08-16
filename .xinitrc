@@ -8,7 +8,6 @@ export QT_IM_MODULE=fcitx
 export XMODIFIERS="@im=fcitx"
 export EDITOR=vim
 export BROWSER=chromium
-export PATH=$PATH:~/bin
 /usr/bin/VBoxClient-all
 [[ -f ~/.Xresources ]] && xrdb -merge ~/.Xresources
 fcitx
