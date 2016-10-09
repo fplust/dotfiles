@@ -12,6 +12,7 @@ __powerline() {
     readonly GIT_NEED_PULL_SYMBOL='⇣'
     readonly PYTHON_SYMBOL=' '
     readonly USER_SYMBOL='  '
+    readonly NEWLINE='⤶'
 
     # Solarized colorscheme
     readonly FG_BASE03="\[$(tput setaf 8)\]"
@@ -147,7 +148,21 @@ __powerline() {
         PS1+="$BG_EXIT$FG_BASE3 $PS_SYMBOL $RESET "
     }
 
-    PROMPT_COMMAND=ps1
+    set_prompt() {
+        # set PS1...
+        ps1
+        
+        # CSI 6n reports the cursor position as ESC[n;mR, where n is the row
+        # and m is the column. Issue this control sequence and silently read
+        # the resulting report until reaching the "R". By setting IFS to ";"
+        # in conjunction with read's -a flag, fields are placed in an array.
+        local curpos
+        echo -en '\033[6n'
+        IFS=';' read -s -d R -a curpos
+        (( curpos[1] > 1 )) && echo "$NEWLINE"
+    }
+
+    PROMPT_COMMAND=set_prompt
 }
 
 __powerline

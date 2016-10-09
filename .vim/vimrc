@@ -106,8 +106,8 @@ set tm=500
 " Show line number
 set nu
 " Show tab and newline char
-"set listchars=tab:‡→,eol:¬
-"set list
+set listchars=tab:↷↷,eol:↩,trail:·
+set list
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Colors and Fonts
@@ -349,6 +349,8 @@ Plug 'Valloric/YouCompleteMe'
 "Plug 'davidhalter/jedi-vim'
 "Plug 'ervandew/supertab'
 Plug 'Yggdroot/indentLine'
+"Plug 'SirVer/ultisnips'
+"Plug 'honza/vim-snippets'
 Plug 'rking/ag.vim'
 "Plug 'ryanoasis/vim-devicons'
 Plug 'scrooloose/nerdcommenter'
@@ -429,6 +431,12 @@ let g:ycm_path_to_python_interpreter = '/usr/bin/python3'
 " 跳转到定义处
 " nnoremap <leader>jd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => UtilSnips
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:UltiSnipsExpandTrigger="<c-j>"
+let g:UltiSnipsJumpForwardTrigger="<c-j>"
+let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Nerd Tree
