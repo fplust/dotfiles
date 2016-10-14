@@ -45,14 +45,14 @@ bar_width = 1
 # 
 # for alsa 'source' will be the capture device. Default: 'hw:Loopback,1'
 # for fifo 'source' will be the path to fifo-file. Default: '/tmp/mpd.fifo' 
-method = pulse
-source = auto
+; method = pulse
+; source = auto
 
 ; method = alsa  
 ; source = hw:Loopback,1 
 
-; method = fifo
-; source = /tmp/mpd.fifo
+method = fifo
+source = /tmp/mpd.fifo
 
 
 
@@ -64,7 +64,7 @@ method = ncurses
 # visual styles, may be 'stereo' or 'mono'. 
 # Stereo mirrors both channels with low frequencies in center.
 # Mono avrages both channels and outputs left to right lowest to highest frequencies
-; style = stereo 
+style = stereo 
 
 
 [color]

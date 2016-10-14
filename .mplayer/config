@@ -1,7 +1,7 @@
 # Write your default config options here!
 
 vo=x11
-ao=alsa
+ao=pulse
 zoom=1
 
 # really-quiet=1 #Very very little console output

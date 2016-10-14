@@ -151,7 +151,7 @@ __powerline() {
     set_prompt() {
         # set PS1...
         ps1
-        
+
         # CSI 6n reports the cursor position as ESC[n;mR, where n is the row
         # and m is the column. Issue this control sequence and silently read
         # the resulting report until reaching the "R". By setting IFS to ";"
