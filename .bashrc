@@ -10,6 +10,7 @@ if [[ $TERM == xterm* ]] || [[ $TERM == tmux ]]; then
     alias ls='ls --color=auto'
     eval `dircolors ~/.dircolors`
     alias dict='ydcv'
+    alias google='proxychains -q googler -n 5 --np -l zh'
     if [ -n "$DISPLAY" ]; then
         export VIRTUAL_ENV_DISABLE_PROMPT=1
         source ~/.bash-powerline.sh

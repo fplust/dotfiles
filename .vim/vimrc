@@ -106,7 +106,7 @@ set tm=500
 " Show line number
 set nu
 " Show tab and newline char
-set listchars=tab:↷↷,eol:↩,trail:·
+set listchars=tab:>·,eol:↩,trail:·
 set list
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -114,6 +114,7 @@ set list
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Enable syntax highlighting
 syntax enable
+let g:tex_conceal = ""
 
 try
 colorscheme solarized
@@ -125,6 +126,11 @@ set background=dark
 " Set extra options when running in GUI mode
 if has("gui_running")
 set guioptions-=T
+set guioptions-=m
+set guioptions-=r
+set guioptions-=R
+set guioptions-=l
+set guioptions-=L
 set guioptions-=e
 set t_Co=256
 set guitablabel=%M\ %t
@@ -363,7 +369,7 @@ Plug 'tpope/vim-markdown'
 Plug 'majutsushi/tagbar'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'wting/rust.vim'
-Plug 'jceb/vim-orgmode'
+"Plug 'jceb/vim-orgmode'
 Plug 'vimwiki/vimwiki'
 Plug 'lilydjwg/fcitx.vim'
 

@@ -149,6 +149,9 @@ __powerline() {
     }
 
     set_prompt() {
+        # see link bellow
+        # http://stackoverflow.com/questions/19943482/configure-shell-to-always-print-prompt-on-new-line-like-zsh
+
         # set PS1...
         ps1
 
@@ -157,8 +160,10 @@ __powerline() {
         # the resulting report until reaching the "R". By setting IFS to ";"
         # in conjunction with read's -a flag, fields are placed in an array.
         local curpos
+        stty -echo
         echo -en '\033[6n'
         IFS=';' read -s -d R -a curpos
+        stty echo
         (( curpos[1] > 1 )) && echo "$NEWLINE"
     }
 

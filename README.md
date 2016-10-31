@@ -1,11 +1,11 @@
 # dotfiles
-backup my dot and config files.
+backup my arch config files.
 
 ## WM
 - i3
 
 ## terminal
-- Termlite
+- Termite
 
 ## font: 
 - Source Code Pro
