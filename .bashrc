@@ -16,6 +16,7 @@ if [[ $TERM == xterm* ]] || [[ $TERM == tmux ]]; then
         source ~/.bash-powerline.sh
     fi
     export PATH=$PATH:~/bin
+    export PATH=$PATH:~/.npm/bin
     source ~/pyenv/mainpy/bin/activate
     # change terminal title as current running command
     # trap 'printf "\033]0;%s\007" "${BASH_COMMAND//[^[:print:]]/}"' DEBUG

@@ -175,7 +175,7 @@ bindsym $mod+n exec --no-startup-id amixer -q set Master 2%-
 # bindsym XF86AudioMute exec amixer -q set Master toggle
 
 #assign application to workspace
-assign [class="^chromium$"] $ws3
+assign [class="^Chromium$"] $ws3
 assign [class="^Sublime_text$"] $ws2
 assign [class="^Gnome-mplayer$"] $ws4
 

@@ -20,21 +20,23 @@
 import argparse
 import atexit
 import collections
+import codecs
 import functools
 import gzip
 import html.entities
 import html.parser
 import http.client
 from http.client import HTTPSConnection
-import socket
-import ssl
+import locale
 import logging
 import os
-import platform
 import signal
+import socket
+import ssl
 import sys
 import textwrap
 import urllib.parse
+import webbrowser
 
 # Python optional dependency compatibility layer
 try:
@@ -63,7 +65,7 @@ signal.signal(signal.SIGINT, sigint_handler)
 
 # Constants
 
-_VERSION_ = '2.8'
+_VERSION_ = '2.9'
 
 COLORMAP = {k: '\x1b[%sm' % v for k, v in {
     'a': '30', 'b': '31', 'c': '32', 'd': '33',
@@ -79,6 +81,7 @@ COLORMAP = {k: '\x1b[%sm' % v for k, v in {
 
 # Disguise as Firefox on Ubuntu
 USER_AGENT = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0')
+ua = True  # User Agent is enabled by default
 
 # Self-upgrade parameters
 #
@@ -118,7 +121,6 @@ def open_url(url):
         os.dup2(fd, 2)
         os.dup2(fd, 1)
     try:
-        import webbrowser
         webbrowser.open(url)
     finally:
         if open_url.suppress_browser_output:
@@ -133,6 +135,62 @@ def printerr(msg):
     ``msg`` could be any stringifiable value.
     """
     print(msg, file=sys.stderr)
+
+
+def unwrap(text):
+    """Unwrap text."""
+    lines = text.split('\n')
+    result = ''
+    for i in range(len(lines) - 1):
+        result += lines[i]
+        if not lines[i]:
+            # Paragraph break
+            result += '\n\n'
+        elif lines[i + 1]:
+            # Next line is not paragraph break, add space
+            result +=  ' '
+    # Handle last line
+    result += lines[-1] if lines[-1] else '\n'
+    return result
+
+
+def check_stdout_encoding():
+    """Make sure stdout encoding is utf-8.
+
+    If not, print error message and intrustructions, then exit with
+    status 1.
+
+    This function is a no-op on win32 because encoding on win32 is
+    messy, and let's just hope for the best. /s
+    """
+    if sys.platform == 'win32':
+        return
+
+    # Use codecs.lookup to resolve text encoding alias
+    encoding = codecs.lookup(sys.stdout.encoding).name
+    if encoding != 'utf-8':
+        locale_lang, locale_encoding = locale.getlocale()
+        if locale_lang is None:
+            locale_lang = '<unknown>'
+        if locale_encoding is None:
+            locale_encoding = '<unknown>'
+        ioencoding = os.getenv('PYTHONIOENCODING', 'not set')
+        sys.stderr.write(unwrap(textwrap.dedent("""\
+        stdout encoding '{encoding}' detected. googler requires utf-8 to
+        work properly. The wrong encoding may be due to a non-UTF-8
+        locale or an improper PYTHONIOENCODING. (For the record, your
+        locale language is {locale_lang} and locale encoding is
+        {locale_encoding}; your PYTHONIOENCODING is {ioencoding}.)
+
+        Please set a UTF-8 locale (e.g., en_US.UTF-8) or set
+        PYTHONIOENCODING to utf-8.
+        """.format(
+            encoding=encoding,
+            locale_lang=locale_lang,
+            locale_encoding=locale_encoding,
+            ioencoding=ioencoding,
+        ))))
+        sys.exit(1)
 
 
 # Classes
@@ -151,21 +209,30 @@ class TLS1_2Connection(HTTPSConnection):
                 self.timeout, self.source_address)
 
         # Optimizations not available on OS X
-        if not notweak and platform.system() == 'Linux':
+        if not notweak and sys.platform.startswith('linux'):
             sock.setsockopt(socket.SOL_TCP, socket.TCP_DEFER_ACCEPT, 1)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,524288)
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF, 524288)
 
         if getattr(self, '_tunnel_host', None):
             self.sock = sock
-            self._tunnel()
-            HTTPSConnection.connect(self)
-        elif not notweak and sys.version_info >= (3,4):
-            # Use TLS 1.2
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                    ssl_version=ssl.PROTOCOL_TLSv1_2)
-        else:
-            HTTPSConnection.connect(self)
+        elif not notweak:
+            # Try to use TLS 1.2
+            ssl_context = None
+            if hasattr(ssl, 'PROTOCOL_TLS'):
+                # Since Python 3.5.3
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
+                                        ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+            elif hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+                # Since Python 3.4
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+            if ssl_context:
+                self.sock = ssl_context.wrap_socket(sock)
+                return
+
+        # Fallback
+        HTTPSConnection.connect(self)
 
 class GoogleUrl(object):
     """
@@ -627,8 +694,8 @@ class GoogleConnection(object):
     def fetch_page(self, url):
         """Fetch a URL.
 
-        Allows one reconnection and one redirection before failing and
-        raising GoogleConnectionError.
+        Allows one reconnection and multiple redirections before failing
+        and raising GoogleConnectionError.
 
         Parameters
         ----------
@@ -661,12 +728,17 @@ class GoogleConnection(object):
                 raise GoogleConnectionError("Failed to get '%s'." % url)
 
         resp = self._resp
-        if resp.status in {301, 302, 303, 307, 308}:
-            redirection_url = resp.getheader('location', '')
-            if 'sorry/IndexRedirect?' in redirection_url:
-                raise GoogleConnectionError('Connection blocked due to unusual activity.')
-            self._redirect(redirection_url)
-            resp = self._resp
+        redirect_counter = 0
+        while resp.status != 200 and redirect_counter < 3:
+            if resp.status in {301, 302, 303, 307, 308}:
+                redirection_url = resp.getheader('location', '')
+                if 'sorry/IndexRedirect?' in redirection_url:
+                    raise GoogleConnectionError('Connection blocked due to unusual activity.')
+                self._redirect(redirection_url)
+                resp = self._resp
+                redirect_counter += 1
+            else:
+                break
 
         if resp.status != 200:
             raise GoogleConnectionError('Got HTTP %d: %s' % (resp.status, resp.reason))
@@ -728,7 +800,7 @@ class GoogleConnection(object):
         logger.debug('Fetching URL %s', url)
         self._conn.request('GET', url, None, {
             'Accept-Encoding': 'gzip',
-            'User-Agent': USER_AGENT,
+            'User-Agent': USER_AGENT if ua else '',
             'Cookie': self.cookie,
             'Connection': 'keep-alive',
             'DNT': '1',
@@ -783,7 +855,7 @@ def annotate_tag(annotated_starttag_handler):
                     if attrs[attr] != selector[attr]:
                         break
             else:
-                # Passed all criterions of the selector
+                # Passed all criteria of the selector
                 ignored = True
                 break
 
@@ -966,6 +1038,31 @@ class GoogleParser(html.parser.HTMLParser):
     #     abstract text
     #   </div>            <!-- stop_populating_textbuf, pop to sitelink abstract -->
     #
+    # - Sometimes Google autocorrects a query. Whenever this happens
+    #   there will be a block whose English version reads "Showing
+    #   results for ... <newline> Search instead for ...", and the HTML
+    #   looks like
+    #
+    #   <span class="spell">Showing results for</span>
+    #   <a class="spell" href="/search?q=google..."><b><i>google</i></b></a>
+    #   <br>
+    #   <span class="spell_orig"></span>
+    #
+    #   We collect the text inside a.spell as the suggested spelling
+    #   (self.suggested_spelling).
+    #
+    #   Note that:
+    #
+    #   1. When npfr=1 (exact), there could still be an
+    #      a.spell, in a block that reads (English version) "Did you mean:
+    #      ...". Therefore, we only consider the query autocorrected when a
+    #      meaningful .spell_orig is also present (self.autocorrected).
+    #
+    #   2. A few garbage display:none, empty tags related to spell
+    #      appear to be always present: span#srfm.spell, a#srfl.spell,
+    #      span#sifm.spell_orig, a#sifl.spell_orig. We need to exclude
+    #      the ids srfm, srfl, sifm and sifl from our consideration.
+    #
     # - Sometimes Google omits similar (more like duplicate) result
     #   entries. Whenever this happens there will be a notice in p#ofr. The way
     #   to unfilter is to simply add '&filter=0' to the query string.
@@ -1053,12 +1150,18 @@ class GoogleParser(html.parser.HTMLParser):
     #           </span>
     #           <br><b>3 HOURS Best Relaxing Music</b> &#39;Romantic <b>Piano</b>&quot; Background <b>Music</b> for Stress ... 3:03 <b>...</b>
     #       </span>
+    #
+    #   8. There's no a.spell_orig when the query is autocorrected; the
+    #      <a> tag (linking to the exact search) is wrapped in the
+    #      span.spell_orig.
 
     def __init__(self, news=False):
         html.parser.HTMLParser.__init__(self)
 
         self.news = news
 
+        self.autocorrected = False
+        self.suggested_spelling = None
         self.filtered = False
         self.results = []
 
@@ -1103,17 +1206,27 @@ class GoogleParser(html.parser.HTMLParser):
             self.set_handlers_to('result')
             return 'result'
 
+        # Autocorrect
+        if tag == 'span' and 'spell_orig' in self.classes(attrs) and attrs.get('id') != 'sifm':
+            self.autocorrected = True
+            return
+        if tag == 'a' and 'spell' in self.classes(attrs) and attrs.get('id') != 'srfl':
+            self.start_populating_textbuf()
+            return 'spell'
+
         # Omitted results
         if tag == 'p' and attrs.get('id') == 'ofr':
             self.filtered = True
 
     @retrieve_tag_annotation
     def root_end(self, tag, annotation):
-        pass
+        if annotation == 'spell':
+            self.stop_populating_textbuf()
+            self.suggested_spelling = self.pop_textbuf()
 
     @annotate_tag
     def result_start(self, tag, attrs):
-        if '' == USER_AGENT and tag == 'span' and 'mime' in self.classes(attrs):
+        if not ua and tag == 'span' and 'mime' in self.classes(attrs):
             self.start_populating_textbuf()
             return 'title_filetype'
 
@@ -1125,20 +1238,20 @@ class GoogleParser(html.parser.HTMLParser):
             self.set_handlers_to('abstract')
             return 'abstract'
 
-        if '' == USER_AGENT and not self.abstract_registered \
+        if not ua and not self.abstract_registered \
                 and tag == 'span' and 'st' in self.classes(attrs):
             self.start_populating_textbuf(lambda text: text + ' ')
             return 'abstract_gservices'
 
         if not self.sitelinks and tag == 'table':
-            if '' != USER_AGENT or (not self.news and 'ts' not in self.classes(attrs)):
+            if ua or (not self.news and 'ts' not in self.classes(attrs)):
                 self.set_handlers_to('sitelink_table')
                 return 'sitelink_table'
 
         if self.news:
             if not self.metadata_registered and tag == 'div' and 'slp' in self.classes(attrs):
                 # Change metadata field separator from '-' to ', ' for better appearance
-                if '' != USER_AGENT:
+                if ua:
                     self.start_populating_textbuf(lambda text: ', ' if text == '-' else text)
                 else:
                     self.start_populating_textbuf(lambda text:
@@ -1167,14 +1280,14 @@ class GoogleParser(html.parser.HTMLParser):
             self.stop_populating_textbuf()
             self.abstract = self.pop_textbuf()
             self.abstract_registered = True
-        if annotation == 'abstract_gservices':
+        elif annotation == 'abstract_gservices':
             self.stop_populating_textbuf()
             self.abstract = self.pop_textbuf().replace('  ', ' ')
             self.abstract_registered = False
 
     @annotate_tag
     def title_start(self, tag, attrs):
-        if '' != USER_AGENT and tag == 'span':
+        if ua and tag == 'span':
             # Print a space after the filetype indicator
             self.start_populating_textbuf(lambda text: text + ' ')
             return 'title_filetype'
@@ -1577,6 +1690,7 @@ class GooglerCmd(object):
         atexit.register(self._conn.close)
 
         self.results = []
+        self._autocorrected_to = None
         self._results_filtered = False
         self._urltable = {}
 
@@ -1621,6 +1735,7 @@ class GooglerCmd(object):
         parser.feed(page)
 
         self.results = parser.results
+        self._autocorrected_to = parser.suggested_spelling if parser.autocorrected else None
         self._results_filtered = parser.filtered
         self._urltable = {}
         for r in self.results:
@@ -1677,9 +1792,28 @@ class GooglerCmd(object):
 
         """
         self.fetch()
+        colors = self.colors
+        if self._autocorrected_to:
+            if colors:
+                # Underline the keywords
+                autocorrected_to = '\x1b[4m' + self._autocorrected_to + '\x1b[24m'
+            else:
+                autocorrected_to = self._autocorrected_to
+            autocorrect_info = ('Showing results for %s; enter "x" for an exact search.' %
+                                autocorrected_to)
+            printerr('')
+            if colors:
+                printerr(colors.prompt + autocorrect_info + colors.reset)
+            else:
+                printerr('** ' + autocorrect_info)
         self.display_results(prelude=prelude, json_output=json_output)
         if self._results_filtered:
-            printerr('** Enter "unfilter" to show similar results Google omitted.')
+            unfilter_info = 'Enter "unfilter" to show similar results Google omitted.'
+            if colors:
+                printerr(colors.prompt + unfilter_info + colors.reset)
+            else:
+                printerr('** ' + unfilter_info)
+            printerr('')
 
     def read_next_command(self):
         """Show omniprompt and read user command line.
@@ -1762,9 +1896,16 @@ class GooglerCmd(object):
 
     @require_keywords
     @no_argument
+    def do_exact(self):
+        # Reset start to 0 when exact is applied.
+        self._google_url.update(start=0, exact=True)
+        self.fetch_and_display()
+
+    @require_keywords
+    @no_argument
     def do_unfilter(self):
         # Reset start to 0 when unfilter is applied.
-        self._google_url.update(None, **{'start':0,})
+        self._google_url.update(start=0)
         self._google_url.set_queries(filter=0)
         self.fetch_and_display()
 
@@ -1797,6 +1938,8 @@ class GooglerCmd(object):
                     self.do_previous('')
                 elif cmd == 'q':
                     break
+                elif cmd == 'x':
+                    self.do_exact('')
                 elif cmd == 'unfilter':
                     self.do_unfilter('')
                 elif cmd == '?':
@@ -2032,6 +2175,19 @@ def self_upgrade(include_git=False):
 
 # Miscellaneous functions
 
+def https_proxy_from_environment():
+    if 'https_proxy' not in os.environ:
+        return None
+    proxy = urllib.parse.urlparse(os.environ['https_proxy']).netloc
+    # urlparse recognizes a netloc only if it is introduced by '//'
+    # (https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse).
+    # This means a bare host:port like 'localhost:8118' won't be
+    # recognized. In that case, try again with the '//' prefix.
+    if not proxy:
+        proxy = urllib.parse.urlparse('//' + os.environ['https_proxy']).netloc
+    return proxy if proxy else None
+
+
 def parse_args(args=None, namespace=None):
     """Parse googler arguments/options.
 
@@ -2053,20 +2209,16 @@ def parse_args(args=None, namespace=None):
 
     argparser = GooglerArgumentParser(description='Google from the command-line.')
     addarg = argparser.add_argument
-    addarg('-s', '--start', dest='start', type=argparser.nonnegative_int,
-           default=0, metavar='N',
+    addarg('-s', '--start', type=argparser.nonnegative_int, default=0, metavar='N',
            help='start at the Nth result')
-    addarg('-n', '--count', dest='num', type=argparser.positive_int,
-           default=10, metavar='N',
-           help='show N results (default 10)')
-    addarg('-N', '--news', dest='news', action='store_true',
-           help='show results from news section')
-    addarg('-c', '--tld', dest='tld', metavar='TLD',
+    addarg('-n', '--count', dest='num', type=argparser.positive_int, default=10,
+           metavar='N', help='show N results (default 10)')
+    addarg('-N', '--news', action='store_true', help='show results from news section')
+    addarg('-c', '--tld', metavar='TLD',
            help="""country-specific search with top-level domain .TLD, e.g., 'in'
            for India. Ref: https://en.wikipedia.org/wiki/List_of_Google_domains""")
-    addarg('-l', '--lang', dest='lang', metavar='LANG',
-           help='display in language LANG')
-    addarg('-x', '--exact', dest='exact', action='store_true',
+    addarg('-l', '--lang', metavar='LANG', help='display in language LANG')
+    addarg('-x', '--exact', action='store_true',
            help='disable automatic spelling correction')
     addarg('-C', '--nocolor', dest='colorize', action='store_false',
            help='disable color output')
@@ -2078,39 +2230,39 @@ def parse_args(args=None, namespace=None):
     addarg('-t', '--time', dest='duration', type=argparser.is_duration, metavar='dN',
            help='time limit search '
            '[h5 (5 hrs), d5 (5 days), w5 (5 weeks), m5 (5 months), y5 (5 years)]')
-    addarg('-w', '--site', dest='site', metavar='SITE',
-           help='search a site using Google')
-    addarg('-p', '--proxy', dest='proxy',
+    addarg('-w', '--site', metavar='SITE', help='search a site using Google')
+    addarg('-p', '--proxy', default=https_proxy_from_environment(),
            help='tunnel traffic through an HTTPS proxy (HOST:PORT)')
-    addarg('--noua', dest='noua', action='store_true',
-           help='disable user agent')
-    addarg('--notweak', dest='notweak', action='store_true',
+    addarg('--noua', action='store_true', help='disable user agent')
+    addarg('--notweak', action='store_true',
            help='disable TCP optimizations and forced TLS 1.2')
-    addarg('--json', dest='json', action='store_true',
-           help='output in JSON format; implies --noprompt')
-    addarg('--enable-browser-output', dest='enable_browser_output', action='store_true',
+    addarg('--json', action='store_true',
+           help='output in JSON format; implies --exact and --noprompt')
+    addarg('--enable-browser-output', action='store_true',
            help='do not suppress browser output (stdout and stderr)')
     addarg('--np', '--noprompt', dest='noninteractive', action='store_true',
            help='search and exit, do not prompt')
-    addarg('-d', '--debug', dest='debug', action='store_true',
-           help='enable debugging')
-    addarg('keywords', nargs='*', metavar='KEYWORD',
-           help='search keywords')
-
+    addarg('keywords', nargs='*', metavar='KEYWORD', help='search keywords')
     if ENABLE_SELF_UPGRADE_MECHANISM and not system_is_windows():
-        addarg('-U', '--upgrade', dest='upgrade', action='store_true',
+        addarg('-u', '--upgrade', action='store_true',
                help='perform in-place self-upgrade')
-        addarg('--include-git', dest='include_git', action='store_true',
-               help='when used in conjuction with --upgrade, upgrade to latest git master')
+        addarg('--include-git', action='store_true',
+               help='when used with --upgrade, upgrade to latest git master')
+    addarg('-v', '--version', action='version', version=_VERSION_)
+    addarg('-d', '--debug', action='store_true', help='enable debugging')
 
     return argparser.parse_args(args, namespace)
 
 
 def main():
-    try:
-        global USER_AGENT
+    global ua
 
+    try:
         opts = parse_args()
+
+        # --json implies --exact
+        if opts.json:
+            opts.exact = True
 
         # Set logging level
         if opts.debug:
@@ -2121,6 +2273,15 @@ def main():
         if hasattr(opts, 'upgrade') and opts.upgrade:
             self_upgrade(include_git=opts.include_git)
             sys.exit(0)
+
+        check_stdout_encoding()
+
+        if opts.keywords:
+            try:
+                # Add cmdline args to readline history
+                readline.add_history(' '.join(opts.keywords))
+            except Exception:
+                pass
 
         # Set colors
         if opts.colorize:
@@ -2135,7 +2296,7 @@ def main():
             open_url.suppress_browser_output = False
 
         if opts.noua:
-            USER_AGENT = ''
+            ua = False
 
         repl = GooglerCmd(opts)
 
@@ -2164,4 +2325,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    atexit.register(logging.shutdown)
