@@ -340,7 +340,7 @@ endif
 " => plugins
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set nocompatible
-call plug#begin('~/.vim/bundle')
+call plug#begin('~/.vim/plugins')
 
 " plugin on GitHub repo
 Plug 'mhinz/vim-startify'
@@ -348,8 +348,8 @@ Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'scrooloose/syntastic'
-Plug 'scrooloose/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': 'NERDTreeToggle' }
 " Plug 'tpope/vim-surround'
 Plug 'Valloric/YouCompleteMe'
 "Plug 'davidhalter/jedi-vim'
@@ -365,7 +365,7 @@ Plug 'Chiel92/vim-autoformat'
 Plug 'airblade/vim-gitgutter'
 "Plug 'Raimondi/delimitMate'
 "Plug 'godlygeek/tabular'
-Plug 'plasticboy/vim-markdown'
+Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 "Plug 'majutsushi/tagbar'
 Plug 'ctrlpvim/ctrlp.vim'
 "Plug 'wting/rust.vim'
@@ -397,7 +397,7 @@ nmap <C-t> :TagbarToggle<CR>
 " => Syntastic (syntax checker)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:syntastic_python_checkers=['pylint']
-let g:syntastic_javascript_checkers = ['jshint']
+let g:syntastic_javascript_checkers = ['eslint']
 
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}

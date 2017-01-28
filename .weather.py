@@ -12,8 +12,8 @@ def getWeatherCondition(city):
         return None
     return loads(req.read().decode('utf8'))
 
+city = "JinJiang,cn"
 # city = "Changsha,cn"
-city = "Changsha,cn"
 weather = getWeatherCondition(city)
 temper = int(weather['main']['temp'] - 273.15)
 iconid = weather['weather'][0]['icon']
